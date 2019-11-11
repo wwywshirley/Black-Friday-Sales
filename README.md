@@ -110,7 +110,7 @@ summary(df)
 dim(df) #After pre-processing, our data set still has 537577 rows and 12 columns. i.e. no data loss
 plot_missing(df) #Once again, check for missing values
 ```
-![](images/000004 (1).png)
+![](images/000004.png)
 ```
 #### Do some Univariate Analysis
 stat_function = function(x){
@@ -140,3 +140,69 @@ options(scipen = 9999)
 boxplot(df[num_var],horizontal = T,col = rainbow(1:10))
 ```
 ![](images/0000003.png)
+## Linear Regression
+```
+##Dropping dependent variable values to be predicted
+df1<-df_unique_Users
+df1$User_ID <- NULL
+df1$Product_ID <- NULL
+
+##Dividing data into training and testing
+sample = sample(1:nrow(df1),size = floor(nrow(df1)*0.7))
+train = df1[sample,]
+test = df1[-sample,]
+##Start to build the model
+lm_fit = lm(log(Purchase)~., data = train)
+summary(lm_fit)
+plot(lm_fit)
+###
+pred <- predict(lm_fit, test, interval="confidence")
+actual <- log(test$Purchase) 
+rmse <- (mean((pred - actual)^2))^0.5
+rmse
+#AIC(pred)
+#confusionMatrix(log(test$Purchase), actual, pred, dnn=list('actual','predicted'))# estimate = `Linear regression`)
+#table(actual, pred, dnn=list('actual','predicted'))
+
+#pred
+plot(pred)
+```
+![](images/w.png)![](images/ww.png)![](images/www.png)![](images/wwww.png)
+```
+#************ RIDGE REGRESSION FEATURE SELECTION**************#
+library(glmnet)
+x=model.matrix(df1$Purchase ~ ., df1)
+#y=log(df1$Purchase) #Log Transformed Purchases gave a negative Lambda
+y=df1$Purchase
+
+grid=10^seq(10,-2,length=100) #Creates a sequence of 100 λ values
+ridge_model=glmnet(x, y, alpha=0, lambda=grid)#Remember that α = 0 is for ridge regression
+dim(coef(ridge_model)) #This give 18 coefficients 100 λ values
+ridge_model$lambda[50] #811130831 is the 10th lambda location
+coef(ridge_model)[,50] #Gives the coefficients at high λ values
+sqrt(sum(coef(ridge_model)[-1,50]^2)) # [1] 105775.9 - This is the Shrinkage penalty
+ridge_model$lambda[60] # Notice the smaller value of lambda
+coef(ridge_model)[,60] #Now, notice the coefficients are larger
+sqrt(sum(coef(ridge_model)[-1,60]^2)) #[1] 118170.6 is the new shrinkage penalty
+predict(ridge_model, s=50, type = "coefficients")[1:18,] #Predict coefficients at new value of λ=50
+
+#******FINDING BEST LAMBDA***************#
+set.seed(1)
+train = sample(1:nrow(x), nrow(x)/2)
+test = (-train)
+y_test=y[test]
+ridge_model=glmnet(x[train,], y[train], alpha=0, lambda=grid, thresh = 1e-12)
+ridge_pred=predict(ridge_model, s=8, newx=x[test,], type = "coefficients")[1:18,]
+ridge_pred
+cv_out=cv.glmnet(x[train,], y[train], alpha=0) #We have used the Default is 10-fold cross-validation
+plot(cv_out)
+plot(ridge_model)
+
+#See the plot below, our Most regularized model has a mean squared error (MSE) That is not within one standard error of the minimal
+best_lambda=cv_out$lambda.min #This is showing us the best lambda value
+best_lambda
+out=glmnet(x,y,alpha=0)
+predict(out,type="coefficients",s=best_lambda)[1:18,]
+```
+![](images/a.png)
+![](images/aa.png)
