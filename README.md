@@ -236,3 +236,36 @@ plot(1:k.max, wss,
 
 ```
 ![](images/22.png)
+```
+#****************SPECIAL PRE-PROCESSING FOR MORE MODELING*******************#
+#Setting column level to get rid of the "+" sign in the Stay_In_Current_City_Years column
+
+df3 <- df
+levels(df3$Stay_In_Current_City_Years)[levels(df3$Stay_In_Current_City_Years) ==  "4+"] <- "4" 
+
+#Recoding age groups so it can be converted to numeric. This is very important for Modeling
+levels(df3$Age)[levels(df3$Age) == "0-17"] <- 0
+levels(df3$Age)[levels(df3$Age) == "18-25"] <- 1
+levels(df3$Age)[levels(df3$Age) == "26-35"] <- 2
+levels(df3$Age)[levels(df3$Age) == "36-45"] <- 3
+levels(df3$Age)[levels(df3$Age) == "46-50"] <- 4
+levels(df3$Age)[levels(df3$Age) == "51-55"] <- 5
+levels(df3$Age)[levels(df3$Age) == "55+"] <- 6
+
+#It strongly recommended to convert factor variables into numeric or integer for modeling purposes. Hence:
+df3$Age <- as.numeric(df3$Age) #Now, age is converted to numeric
+df3$Gender <- as.numeric(df3$Gender) #Convert Gender into numeric
+df3$Purchase <- as.numeric(log(df3$Purchase))
+
+#*********SOME BASIC FEATURE ENGINEERING************#
+df3 <- dummy.data.frame(df3, names = c("City_Category"), sep = "_") # Creates Dummies for City_Category column
+sapply(df3, class) #Checks classes of all variables to ensure that they're in the right type for modelling
+
+#Partition Data into train and test sets
+sample = sample(1:nrow(df3),size = floor(nrow(df3)*0.7))
+train = df3[sample,]
+test = df3[-sample,]
+train <- train[train$Product_Category_1 <= 18,] #This includes on the 1st 18 categories. Other categories are 
+                                                # noisy
+                                                
+```
