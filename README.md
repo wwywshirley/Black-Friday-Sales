@@ -206,3 +206,33 @@ predict(out,type="coefficients",s=best_lambda)[1:18,]
 ```
 ![](images/a.png)
 ![](images/aa.png)
+```
+#********Clustering: Finding the Best K using Elbow Method***************#
+df2<- df_unique_Users #Use df_unique_Users dataset because it creates clusters by User_id not by transactions
+df2$Marital_Status <- ifelse(df2$Marital_Status == 'Married',1,0)
+df2$Gender <- ifelse(df2$Gender == 'Female',1,0)
+df2$Age <- ifelse(df2$Age == '0-17',1,df$Age)
+#df2$Purchase <- NULL
+levels(df2$City_Category)[levels(df2$City_Category) == "A"] <- 1
+levels(df2$City_Category)[levels(df2$City_Category) == "B"] <- 2
+levels(df2$City_Category)[levels(df2$City_Category) == "C"] <- 3
+df2$City_Category <- as.integer(df2$City_Category)
+df2$Occupation <- as.numeric(df2$Occupation)
+df2$Stay_In_Current_City_Years <- as.numeric(df2$Stay_In_Current_City_Years)
+
+df2$Occupation <- scale(df2$Occupation)
+df2$Stay_In_Current_City_Years <- scale(df2$Stay_In_Current_City_Years)
+df2$Age <- scale(df2$Age)
+df2$City_Category <- scale(df2$City_Category)
+
+k.max <- 15
+data <- df2
+wss <- sapply(1:k.max,function(k){kmeans(data, k, nstart=50,iter.max = 15 )$tot.withinss})
+#wss
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters (K)",
+     ylab="Total within-clusters sum of squares")
+
+```
+![](images/22.png)
