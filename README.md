@@ -3,7 +3,6 @@ This study examines shopping that is done on “Black Friday,” routinely the b
 Our dataset is comprised of sales transactions captured at a retail store on “Black Fridays.”  It has 537,577 rows and 12 columns. predict purchase amount using the data features, thus using the dataset to form a regression problem. Customers will be split into two classes (i.e. the Big Spenders and Small Buyers; aka High/Low spending classes).  Customer behavior is explained from this examination of  multiple shopping experiences.  
 
 
-# Code
 ## Basic Data Exploration
 ### Data Structure
 The data source is named the Black Friday data set and it was obtained from Kaggle.com and originally utilized as part of a competition on the Analytics Vidhya website. It is a sample of the transactions made in a retail store. The data was utilized to better understand customer purchase behavior against different products. The various algorithms, with an emphasis on regression,  were used to predict the dependent variable (the amount of purchase) with the help of the information contained in the other variables. Classifications were also accomplished with this  dataset since several variables are categorical. The approaches were "Predicting the age of the consumer" and "Predict the category of goods bought.” This dataset is amenable to clustering so different clusters were determined.
@@ -145,7 +144,7 @@ plot_bar(df, ) #Bar graphs showing Distributions of all Descrete Features
 ```
 ![](images/4.png)![](images/5.png)![](images/6.png)![](images/7.png)![](images/8.png)![](images/9.png)![](images/00000f.png)
 
-
+#
 ## Linear Regression
 Started from simple linear regression to do the prediction. In the model, we have set unless dependent variables null and selected variables like gender, age, occupation, years in current city, marital status and items count. The adjusted R-squared value is 0.6915.
 
@@ -263,3 +262,126 @@ corMatrix %>%
         coord_equal()  +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+![](images/matrix.png)
+
+### Estimate Model Using Train Data
+```
+model <- lm(Purchase ~ Gender + Age + Occupation + Marital_Status + City_Category + Stay_In_Current_City_Years, data = trainInt, method = 'anova')
+equation <- noquote(paste('Purchase =',
+                            round(model$coefficients[1],0), '+',
+                            round(model$coefficients[2],0), '* Gender', '+',
+                            round(model$coefficients[3],0), '* Age', '+',
+                            round(model$coefficients[4],0), '* Occupation', '+',
+                            round(model$coefficients[5],0), '* Marital_Status', '+',
+                            round(model$coefficients[6],0), '* City_Category', '+',
+                            round(model$coefficients[7],0), '* Stay_In_Current_City_Years'))
+equation
+summary(model)
+anova(model)
+```
+Coefficients:</br>
+                           Estimate Std. Error t value Pr(>|t|)   </br> 
+(Intercept)                6999.143     47.714 146.689  < 2e-16 ***</br>
+Gender                      676.445     18.915  35.763  < 2e-16 ***</br>
+Age                          36.737      6.358   5.778 7.55e-09 ***</br>
+Occupation                    9.917      1.254   7.905 2.68e-15 ***</br>
+Marital_Status              -55.853     17.321  -3.225  0.00126 ** </br>
+City_Category               448.607     10.737  41.780  < 2e-16 ***</br>
+Stay_In_Current_City_Years   14.695      6.274   2.342  0.01916 *  </br>
+
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</br>
+
+Residual standard error: 4962 on 376296 degrees of freedom</br>
+Multiple R-squared:  0.008745,	Adjusted R-squared:  0.008729 </br>
+F-statistic: 553.3 on 6 and 376296 DF,  p-value: < 2.2e-16</br>
+
+### Make Predictions Based on Train Data
+```
+predTrain <- predict(model)
+sseTrain <- sum((predTrain - trainInt$Purchase) ^ 2)
+sstTrain <- sum((mean(train$Purchase) - trainInt$Purchase) ^ 2)
+print ("Model R2 (Train Data)")
+modelR2Train <- 1 - sseTrain/sstTrain
+modelR2Train
+print ("Model RMSE (Train Data)")
+rmseTrain <- sqrt(mean((predTrain - trainInt$Purchase) ^ 2))
+rmseTrain
+```
+R2:0.00874475362766736</br>
+RMSE:4961.7446993561
+
+### Make Preductions Based on Test Data
+
+```
+predTest <- predict(model, newdata = testInt)
+sseTest <- sum((predTest - testInt$Purchase) ^ 2)
+sstTest <- sum((mean(test$Purchase) - testInt$Purchase) ^ 2)
+print ("Model R2 (Test Data)")
+modelR2Test <- 1 - sseTest/sstTest
+modelR2Test
+print ("Model RMSE (Test Data)")
+rmseTest <- sqrt(mean((predTest - testInt$Purchase) ^ 2))
+rmseTest
+```
+R2:0.00818251081229127
+RMSE:4954.61021817518
+
+## Boosting Tree
+```
+formula<-as.formula(Purchase ~.)
+
+# mape for RF
+mape<-function(real,predicted){
+  return(round(mean(abs((real-predicted)/real)), 3))
+}
+
+# Mape for xgb
+mape_xgb_fun<- function(preds, dtrain){
+   library(Metrics)
+   labels <- getinfo(dtrain, "label")
+   my_mape <- Metrics::mape(labels, preds)
+   return(list(metric = "mape", value = round(my_mape,3)))
+}
+```
+```
+matrix_xgb = model.matrix(formula, train[, -c("User_ID","Product_ID")])
+
+best_grid <- expand.grid(subsample =  0.5, 
+                        colsample_bytree = 0.75,
+                        eta = 0.01, 
+                        max_depth =  8)  
+
+xgb_best<-xgboost(booster='gbtree',
+               data=matrix_xgb,
+               label=train$Purchase,
+               params = best_grid,
+               nrounds = 1000,
+               feval  = mape_xgb_fun, # evaluation metrics
+               maximize = FALSE, # indicating we want mape to be minimized
+               objective='reg:linear',
+               early_stopping_rounds = 10,
+               verbose = FALSE)
+print(xgb_best)
+```
+No. of features: 91 </br>
+niter: 258</br>
+best_iteration : 248 </br>
+best_ntreelimit : 248 </br>
+best_score : 0.264 </br>
+nfeatures : 91 </br>
+evaluation_log:</br>
+
+iter train_mape</br>
+        1      0.989</br>
+        2      0.978</br>
+               </br>
+      257      0.264</br>
+      258      0.264</br>
+
+
+```
+test_xgb_remain<-predict(xgb_best, newdata = model.matrix(formula, remain_train[, -c("User_ID","Product_ID")]))
+mape_xgb_remain <- mape(real=remain_train$Purchase, predicted = test_xgb_remain)
+mape_xgb_remain
+```
+0.271
