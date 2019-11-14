@@ -212,14 +212,14 @@ anova(model)
 ```
 Coefficients:</br>
                            Estimate Std. Error t value Pr(>|t|)   </br> 
-(Intercept)                6999.143     47.714 146.689  < 2e-16 ***</br>
-Gender                      676.445     18.915  35.763  < 2e-16 ***</br>
-Age                          36.737      6.358   5.778 7.55e-09 ***</br>
-Occupation                    9.917      1.254   7.905 2.68e-15 ***</br>
-Marital_Status              -55.853     17.321  -3.225  0.00126 ** </br>
-City_Category               448.607     10.737  41.780  < 2e-16 ***</br>
-Stay_In_Current_City_Years   14.695      6.274   2.342  0.01916 *  </br>
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</br>
+(Intercept)                6999.143     47.714 146.689  < 2e-16 </br>
+Gender                      676.445     18.915  35.763  < 2e-16 </br>
+Age                          36.737      6.358   5.778 7.55e-09 </br>
+Occupation                    9.917      1.254   7.905 2.68e-15 </br>
+Marital_Status              -55.853     17.321  -3.225  0.00126  </br>
+City_Category               448.607     10.737  41.780  < 2e-16 </br>
+Stay_In_Current_City_Years   14.695      6.274   2.342  0.01916   </br>
+Signif. codes:  0 ‘’ 0.001 ‘’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</br>
 Residual standard error: 4962 on 376296 degrees of freedom</br>
 Multiple R-squared:  0.008745,	Adjusted R-squared:  0.008729 </br>
 F-statistic: 553.3 on 6 and 376296 DF,  p-value: < 2.2e-16</br>
@@ -313,7 +313,7 @@ mape_xgb_remain
 0.271
 
 ## Random Forest
-** Permutation **: Gini Importance or Mean Decrease in Impurity (MDI) calculates each feature importance as the sum over the number of splits (accross all tress) that include the feature, proportionaly to the number of samples it splits.
+Permutation : Gini Importance or Mean Decrease in Impurity (MDI) calculates each feature importance as the sum over the number of splits (accross all tress) that include the feature, proportionaly to the number of samples it splits.
 
 Permutation Importance or Mean Decrease in Accuracy (MDA) is assessed for each feature by removing the association between that feature and the target. This is achieved by randomly permuting the values of the feature and measuring the resulting increase in error. The influence of the correlated features is also removed.
 
