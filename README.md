@@ -180,75 +180,6 @@ We plotted the residuals vs. fitted values as a useful way to check linearity an
 The residuals vs. leverage plots also helps us to identify the influential data in our model. The 
 points we are not looking for are those in the upper right or lower right. From the plot, we can see some outliers in the lower right corner which tend to have a critical impact on our model, so we remove these values to reach unbiased results. 
 
-```
-#************ RIDGE REGRESSION FEATURE SELECTION**************#
-library(glmnet)
-x=model.matrix(df1$Purchase ~ ., df1)
-#y=log(df1$Purchase) #Log Transformed Purchases gave a negative Lambda
-y=df1$Purchase
-
-grid=10^seq(10,-2,length=100) #Creates a sequence of 100 λ values
-ridge_model=glmnet(x, y, alpha=0, lambda=grid)#Remember that α = 0 is for ridge regression
-dim(coef(ridge_model)) #This give 18 coefficients 100 λ values
-ridge_model$lambda[50] #811130831 is the 10th lambda location
-coef(ridge_model)[,50] #Gives the coefficients at high λ values
-sqrt(sum(coef(ridge_model)[-1,50]^2)) # [1] 105775.9 - This is the Shrinkage penalty
-ridge_model$lambda[60] # Notice the smaller value of lambda
-coef(ridge_model)[,60] #Now, notice the coefficients are larger
-sqrt(sum(coef(ridge_model)[-1,60]^2)) #[1] 118170.6 is the new shrinkage penalty
-predict(ridge_model, s=50, type = "coefficients")[1:18,] #Predict coefficients at new value of λ=50
-
-#******FINDING BEST LAMBDA***************#
-set.seed(1)
-train = sample(1:nrow(x), nrow(x)/2)
-test = (-train)
-y_test=y[test]
-ridge_model=glmnet(x[train,], y[train], alpha=0, lambda=grid, thresh = 1e-12)
-ridge_pred=predict(ridge_model, s=8, newx=x[test,], type = "coefficients")[1:18,]
-ridge_pred
-cv_out=cv.glmnet(x[train,], y[train], alpha=0) #We have used the Default is 10-fold cross-validation
-plot(cv_out)
-plot(ridge_model)
-
-#See the plot below, our Most regularized model has a mean squared error (MSE) That is not within one standard error of the minimal
-best_lambda=cv_out$lambda.min #This is showing us the best lambda value
-best_lambda
-out=glmnet(x,y,alpha=0)
-predict(out,type="coefficients",s=best_lambda)[1:18,]
-```
-![](images/a.png)
-![](images/aa.png)
-```
-#********Clustering: Finding the Best K using Elbow Method***************#
-df2<- df_unique_Users #Use df_unique_Users dataset because it creates clusters by User_id not by transactions
-df2$Marital_Status <- ifelse(df2$Marital_Status == 'Married',1,0)
-df2$Gender <- ifelse(df2$Gender == 'Female',1,0)
-df2$Age <- ifelse(df2$Age == '0-17',1,df$Age)
-#df2$Purchase <- NULL
-levels(df2$City_Category)[levels(df2$City_Category) == "A"] <- 1
-levels(df2$City_Category)[levels(df2$City_Category) == "B"] <- 2
-levels(df2$City_Category)[levels(df2$City_Category) == "C"] <- 3
-df2$City_Category <- as.integer(df2$City_Category)
-df2$Occupation <- as.numeric(df2$Occupation)
-df2$Stay_In_Current_City_Years <- as.numeric(df2$Stay_In_Current_City_Years)
-
-df2$Occupation <- scale(df2$Occupation)
-df2$Stay_In_Current_City_Years <- scale(df2$Stay_In_Current_City_Years)
-df2$Age <- scale(df2$Age)
-df2$City_Category <- scale(df2$City_Category)
-
-k.max <- 15
-data <- df2
-wss <- sapply(1:k.max,function(k){kmeans(data, k, nstart=50,iter.max = 15 )$tot.withinss})
-#wss
-plot(1:k.max, wss,
-     type="b", pch = 19, frame = FALSE, 
-     xlab="Number of clusters (K)",
-     ylab="Total within-clusters sum of squares")
-
-```
-![](images/22.png)
-
 ## Multiple Linear Regression
 ### Correlation Matrix
 ```
@@ -288,9 +219,7 @@ Occupation                    9.917      1.254   7.905 2.68e-15 ***</br>
 Marital_Status              -55.853     17.321  -3.225  0.00126 ** </br>
 City_Category               448.607     10.737  41.780  < 2e-16 ***</br>
 Stay_In_Current_City_Years   14.695      6.274   2.342  0.01916 *  </br>
-
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</br>
-
 Residual standard error: 4962 on 376296 degrees of freedom</br>
 Multiple R-squared:  0.008745,	Adjusted R-squared:  0.008729 </br>
 F-statistic: 553.3 on 6 and 376296 DF,  p-value: < 2.2e-16</br>
@@ -323,7 +252,7 @@ print ("Model RMSE (Test Data)")
 rmseTest <- sqrt(mean((predTest - testInt$Purchase) ^ 2))
 rmseTest
 ```
-R2:0.00818251081229127
+R2:0.00818251081229127</br>
 RMSE:4954.61021817518
 
 ## Boosting Tree
@@ -369,19 +298,64 @@ best_iteration : 248 </br>
 best_ntreelimit : 248 </br>
 best_score : 0.264 </br>
 nfeatures : 91 </br>
-evaluation_log:</br>
-
+evaluation_log:
 iter train_mape</br>
         1      0.989</br>
         2      0.978</br>
-               </br>
+      ---         </br>
       257      0.264</br>
-      258      0.264</br>
-
-
+      258      0.264
 ```
 test_xgb_remain<-predict(xgb_best, newdata = model.matrix(formula, remain_train[, -c("User_ID","Product_ID")]))
 mape_xgb_remain <- mape(real=remain_train$Purchase, predicted = test_xgb_remain)
 mape_xgb_remain
 ```
 0.271
+
+## Random Forest
+** Permutation **: Gini Importance or Mean Decrease in Impurity (MDI) calculates each feature importance as the sum over the number of splits (accross all tress) that include the feature, proportionaly to the number of samples it splits.
+
+Permutation Importance or Mean Decrease in Accuracy (MDA) is assessed for each feature by removing the association between that feature and the target. This is achieved by randomly permuting the values of the feature and measuring the resulting increase in error. The influence of the correlated features is also removed.
+
+The best performing Random Forest has been the following:
+```
+grid <- c(6)
+i <- 1
+eval <- c()
+for (i in 1:length(grid)){
+
+  name <- paste("rf_",i)
+  name <- gsub(" ","",name)
+  print(name)
+  rf <- ranger(formula, train[, -c("User_ID","Product_ID")], mtry = grid[i], verbose=TRUE, seed =42, num.trees = 1000, importance = "permutation") 
+  rf
+  print(rf)
+  
+  test_rf_remain <- predict(rf, data = remain_train)$predictions
+  mape_rf_remain <- mape(real = remain_train$Purchase, predicted = test_rf_remain)
+  print("The MAPE of the remaining training dataset test is: ")
+  print(mape_rf_remain)
+  
+  ## To store the different mapes with the different grids 
+  eval <- rbind(eval,name, mape_rf_remain)
+  print(eval)
+}
+```
+Type:                             Regression </br>
+Number of trees:                  1000 </br>
+Sample size:                      120954 </br>
+Number of independent variables:  16 </br>
+Mtry:                             6 </br>
+Target node size:                 5 </br>
+Variable importance mode:         permutation </br>
+Splitrule:                        variance </br>
+OOB prediction error (MSE):       6350550 </br>
+R squared (OOB):                  0.7430875 </br>
+Predicting.. Progress: 40%. Estimated remaining time: 46 seconds.</br>
+Predicting.. Progress: 81%. Estimated remaining time: 14 seconds.</br>
+Aggregating predictions.. Progress: 73%. Estimated remaining time: 11 seconds.</br>
+[1] "The MAPE of the remaining training dataset test is: "</br>
+[1] 0.272</br>
+                [,1]   </br>
+ name           "rf_1" </br>
+ mape_rf_remain "0.272"
