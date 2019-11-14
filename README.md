@@ -5,6 +5,7 @@ Our dataset is comprised of sales transactions captured at a retail store on “
 
 # Code
 ## Basic Data Exploration
+### Data Structure
 The data source is named the Black Friday data set and it was obtained from Kaggle.com and originally utilized as part of a competition on the Analytics Vidhya website. It is a sample of the transactions made in a retail store. The data was utilized to better understand customer purchase behavior against different products. The various algorithms, with an emphasis on regression,  were used to predict the dependent variable (the amount of purchase) with the help of the information contained in the other variables. Classifications were also accomplished with this  dataset since several variables are categorical. The approaches were "Predicting the age of the consumer" and "Predict the category of goods bought.” This dataset is amenable to clustering so different clusters were determined.
 ```
 df_unique_Users <- df %>% group_by(User_ID) %>% 
@@ -31,7 +32,7 @@ plot_str(df_unique_Users)
 ```
 ![](images/1.png)
 
-
+### Data Pre-prosessing: Missing Value
 ```
 sapply(df, function(x) sum(is.na(x))) 
 plot_missing(df)
@@ -39,8 +40,37 @@ plot_missing(df)
 ![](images/000003.png)
 
 ```
-#********BASIC DATA EXPLORATION CONTINUE*********#
-#Our Data set Distribution. i.e. #Who shopped more?
+#For Product_Category_2
+fix_PC2<-rpart(Product_Category_2 ~ User_ID+Product_ID+Age+Gender, data=df[!is.na(df$Product_Category_2),], method="anova")
+df$Product_Category_2[is.na(df$Product_Category_2)] <- predict(fix_PC2, df[is.na(df$Product_Category_2),])
+
+#For Product_Category_3
+fix_PC3<-rpart(Product_Category_3 ~ User_ID+Product_ID+Age+Gender, data=df[!is.na(df$Product_Category_3),], method="anova")
+df$Product_Category_3[is.na(df$Product_Category_3)] <- predict(fix_PC3, df[is.na(df$Product_Category_3),])
+
+head(df,10)
+summary(df)
+dim(df) #After pre-processing, our data set still has 537577 rows and 12 columns. i.e. no data loss
+plot_missing(df) #Once again, check for missing values
+```
+![](images/000004.png)
+### Data Pre-prosessing:Type Conversions
+```
+df$User_ID <- as.factor(df$User_ID)
+df$Product_ID <- as.factor(df$Product_ID)
+df$Gender <- as.factor(if_else(df$Gender == 'M', 'Male', 'Female'))
+df$Age <- as.factor(df$Age)
+df$Occupation <- as.factor(df$Occupation)
+df$City_Category <- as.factor(df$City_Category)
+df$Stay_In_Current_City_Years <- as.factor(df$Stay_In_Current_City_Years)
+df$Marital_Status <- as.factor(if_else(df$Marital_Status == 1, 'Married', 'Single'))
+df$Product_Category_1 <- as.integer(df$Product_Category_1)
+df$Product_Category_2 <- as.integer(df$Product_Category_2)
+df$Product_Category_3 <- as.integer(df$Product_Category_3)
+df$Purchase <- as.numeric(df$Purchase)
+```
+### Data Distribution
+```
 prop.table(table(df$Marital_Status))  #Married? Unmarried?
 prop.table(table(df$Gender)) #Male vs Female?
 prop.table(table(df$Age)) #Age group?
@@ -83,36 +113,8 @@ hist(df$User_ID,
 plot_bar(df, ) #Bar graphs showing Distributions of all Descrete Features
 ```
 ![](images/4.png)![](images/5.png)![](images/6.png)![](images/7.png)![](images/8.png)![](images/9.png)![](images/00000f.png)
-```
-#**********DATA PRE-PROCESSING*********
-# Type Conversions
-df$User_ID <- as.factor(df$User_ID)
-df$Product_ID <- as.factor(df$Product_ID)
-df$Gender <- as.factor(if_else(df$Gender == 'M', 'Male', 'Female'))
-df$Age <- as.factor(df$Age)
-df$Occupation <- as.factor(df$Occupation)
-df$City_Category <- as.factor(df$City_Category)
-df$Stay_In_Current_City_Years <- as.factor(df$Stay_In_Current_City_Years)
-df$Marital_Status <- as.factor(if_else(df$Marital_Status == 1, 'Married', 'Single'))
-df$Product_Category_1 <- as.integer(df$Product_Category_1)
-df$Product_Category_2 <- as.integer(df$Product_Category_2)
-df$Product_Category_3 <- as.integer(df$Product_Category_3)
-df$Purchase <- as.numeric(df$Purchase)
 
-#For Product_Category_2
-fix_PC2<-rpart(Product_Category_2 ~ User_ID+Product_ID+Age+Gender, data=df[!is.na(df$Product_Category_2),], method="anova")
-df$Product_Category_2[is.na(df$Product_Category_2)] <- predict(fix_PC2, df[is.na(df$Product_Category_2),])
 
-#For Product_Category_3
-fix_PC3<-rpart(Product_Category_3 ~ User_ID+Product_ID+Age+Gender, data=df[!is.na(df$Product_Category_3),], method="anova")
-df$Product_Category_3[is.na(df$Product_Category_3)] <- predict(fix_PC3, df[is.na(df$Product_Category_3),])
-
-head(df,10)
-summary(df)
-dim(df) #After pre-processing, our data set still has 537577 rows and 12 columns. i.e. no data loss
-plot_missing(df) #Once again, check for missing values
-```
-![](images/000004.png)
 ```
 #### Do some Univariate Analysis
 stat_function = function(x){
