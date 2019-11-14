@@ -32,7 +32,8 @@ plot_str(df_unique_Users)
 ```
 ![](images/1.png)
 
-### Data Pre-prosessing: Missing Value
+## Data Pre-prosessing
+### Missing Value
 ```
 sapply(df, function(x) sum(is.na(x))) 
 plot_missing(df)
@@ -54,7 +55,7 @@ dim(df) #After pre-processing, our data set still has 537577 rows and 12 columns
 plot_missing(df) #Once again, check for missing values
 ```
 ![](images/000004.png)
-### Data Pre-prosessing:Type Conversions
+### Type Conversions
 ```
 df$User_ID <- as.factor(df$User_ID)
 df$Product_ID <- as.factor(df$Product_ID)
@@ -69,7 +70,37 @@ df$Product_Category_2 <- as.integer(df$Product_Category_2)
 df$Product_Category_3 <- as.integer(df$Product_Category_3)
 df$Purchase <- as.numeric(df$Purchase)
 ```
-### Data Distribution
+### Checking Outliners
+```
+#### Do some Univariate Analysis
+stat_function = function(x){
+    if(class(x)=="integer"|class(x)=="numeric"){
+        var_type = class(x)
+        length = length(x)
+        miss_val = sum(is.na(x))
+        mean = mean(x,na.rm = T)
+        std = sd(x,na.rm = T)
+        var = var(x,na.rm = T)
+        cv = std/mean
+        min = min(x)
+        max = max(x,na.rm = T)
+        pct = quantile(x,na.rm = T,p=c(0.75,0.85,0.90,0.95,0.99,1.0))
+        return(c(var_type=var_type,length=length,miss_val=miss_val,mean=mean,std=std,var=var,cv=cv,min=min,max=max,pct=pct))
+        }
+}
+#####Name of a numeric variable and categorical (factor)variable
+num_var = names(df)[sapply(df,is.numeric)]
+cat_var = names(df)[!sapply(df,is.numeric)]
+###
+#
+mystat = apply(df[num_var],2,stat_function)
+t(mystat)
+###Checking for Outliers
+options(scipen = 9999)
+boxplot(df[num_var],horizontal = T,col = rainbow(1:10))
+```
+![](images/0000003.png)
+## Data Distribution
 ```
 prop.table(table(df$Marital_Status))  #Married? Unmarried?
 prop.table(table(df$Gender)) #Male vs Female?
@@ -115,35 +146,6 @@ plot_bar(df, ) #Bar graphs showing Distributions of all Descrete Features
 ![](images/4.png)![](images/5.png)![](images/6.png)![](images/7.png)![](images/8.png)![](images/9.png)![](images/00000f.png)
 
 
-```
-#### Do some Univariate Analysis
-stat_function = function(x){
-    if(class(x)=="integer"|class(x)=="numeric"){
-        var_type = class(x)
-        length = length(x)
-        miss_val = sum(is.na(x))
-        mean = mean(x,na.rm = T)
-        std = sd(x,na.rm = T)
-        var = var(x,na.rm = T)
-        cv = std/mean
-        min = min(x)
-        max = max(x,na.rm = T)
-        pct = quantile(x,na.rm = T,p=c(0.75,0.85,0.90,0.95,0.99,1.0))
-        return(c(var_type=var_type,length=length,miss_val=miss_val,mean=mean,std=std,var=var,cv=cv,min=min,max=max,pct=pct))
-        }
-}
-#####Name of a numeric variable and categorical (factor)variable
-num_var = names(df)[sapply(df,is.numeric)]
-cat_var = names(df)[!sapply(df,is.numeric)]
-###
-#
-mystat = apply(df[num_var],2,stat_function)
-t(mystat)
-###Checking for Outliers
-options(scipen = 9999)
-boxplot(df[num_var],horizontal = T,col = rainbow(1:10))
-```
-![](images/0000003.png)
 ## Linear Regression
 Started from simple linear regression to do the prediction. In the model, we have set unless dependent variables null and selected variables like gender, age, occupation, years in current city, marital status and items count. The adjusted R-squared value is 0.6915.
 
@@ -247,4 +249,17 @@ plot(1:k.max, wss,
 
 ```
 ![](images/22.png)
+
+## Multiple Linear Regression
+### Correlation Matrix
+```
+corMatrix$var1 = rownames(corMatrix)
+corMatrix %>%
+    gather(key = var2, value = r, 1:7) %>%
+        ggplot(aes(x = var1, y = var2, fill = r)) +
+        geom_tile() +
+        geom_text(aes(label = round(r, 2)), size = 3)+
+        scale_fill_gradient2(low = '#00a6c8', high='#eb3300', mid = 'white') +
+        coord_equal()  +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
