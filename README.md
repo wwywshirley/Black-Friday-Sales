@@ -1,9 +1,11 @@
 # Black-Friday-Sales
-Our dataset is comprised of sales transactions captured at a retail store on “Black Fridays.” It has 550,069 rows and 12 columns. Our primary goal is to predict purchase amount using the data features, thus using the dataset to form a regression problem. Customers will be split into two classes (i.e. the Big Spenders and Small Buyers; aka High/Low spending classes). We expect to improve our understanding of customer behavior from an examination of multiple shopping experiences and to build a report that can highlight our engineering skills for future employers.
+This study examines shopping that is done on “Black Friday,” routinely the busiest shopping day of the year in the United States.  The primary research question was to predict and describe who were the biggest spenders during this shopping event.  The purpose is to utilize these findings to better inform and focus retail marketing efforts.  It is significant because for many retailers this shopping day can mean the difference between a profit and a loss for the fiscal quarter, and sometimes the fiscal year.  The biggest spenders during “Black Friday” are generally  males, between the ages of 26 to 35.  They are most likely to spend over $2000- on specific product classes.  Specific product identification numbers are good predictors of who will spend the most.  It is interesting to note that the biggest spenders were younger males, which is contrary to popular U.S. stereotypes.  
+Our dataset is comprised of sales transactions captured at a retail store on “Black Fridays.”  It has 537,577 rows and 12 columns. predict purchase amount using the data features, thus using the dataset to form a regression problem. Customers will be split into two classes (i.e. the Big Spenders and Small Buyers; aka High/Low spending classes).  Customer behavior is explained from this examination of  multiple shopping experiences.  
+
 
 # Code
 ## Basic Data Exploration
-
+The data source is named the Black Friday data set and it was obtained from Kaggle.com and originally utilized as part of a competition on the Analytics Vidhya website. It is a sample of the transactions made in a retail store. The data was utilized to better understand customer purchase behavior against different products. The various algorithms, with an emphasis on regression,  were used to predict the dependent variable (the amount of purchase) with the help of the information contained in the other variables. Classifications were also accomplished with this  dataset since several variables are categorical. The approaches were "Predicting the age of the consumer" and "Predict the category of goods bought.” This dataset is amenable to clustering so different clusters were determined.
 ```
 df_unique_Users <- df %>% group_by(User_ID) %>% 
   summarise(Gender = Gender[1], 
@@ -141,6 +143,8 @@ boxplot(df[num_var],horizontal = T,col = rainbow(1:10))
 ```
 ![](images/0000003.png)
 ## Linear Regression
+Started from simple linear regression to do the prediction. In the model, we have set unless dependent variables null and selected variables like gender, age, occupation, years in current city, marital status and items count. The adjusted R-squared value is 0.6915.
+
 ```
 ##Dropping dependent variable values to be predicted
 df1<-df_unique_Users
@@ -168,6 +172,11 @@ rmse
 plot(pred)
 ```
 ![](images/w.png)![](images/ww.png)![](images/www.png)![](images/wwww.png)
+
+We plotted the residuals vs. fitted values as a useful way to check linearity and homoscedasticity. There are some large negative residual values at bottom right corner of the plot which means that these values do not meet the linear model assumption. To assess the assumption of linearity, we hope to ensure that the residuals are between -2 and 2. And we deleted those values not located in this range. 
+The residuals vs. leverage plots also helps us to identify the influential data in our model. The 
+points we are not looking for are those in the upper right or lower right. From the plot, we can see some outliers in the lower right corner which tend to have a critical impact on our model, so we remove these values to reach unbiased results. 
+
 ```
 #************ RIDGE REGRESSION FEATURE SELECTION**************#
 library(glmnet)
@@ -236,36 +245,4 @@ plot(1:k.max, wss,
 
 ```
 ![](images/22.png)
-```
-#****************SPECIAL PRE-PROCESSING FOR MORE MODELING*******************#
-#Setting column level to get rid of the "+" sign in the Stay_In_Current_City_Years column
-
-df3 <- df
-levels(df3$Stay_In_Current_City_Years)[levels(df3$Stay_In_Current_City_Years) ==  "4+"] <- "4" 
-
-#Recoding age groups so it can be converted to numeric. This is very important for Modeling
-levels(df3$Age)[levels(df3$Age) == "0-17"] <- 0
-levels(df3$Age)[levels(df3$Age) == "18-25"] <- 1
-levels(df3$Age)[levels(df3$Age) == "26-35"] <- 2
-levels(df3$Age)[levels(df3$Age) == "36-45"] <- 3
-levels(df3$Age)[levels(df3$Age) == "46-50"] <- 4
-levels(df3$Age)[levels(df3$Age) == "51-55"] <- 5
-levels(df3$Age)[levels(df3$Age) == "55+"] <- 6
-
-#It strongly recommended to convert factor variables into numeric or integer for modeling purposes. Hence:
-df3$Age <- as.numeric(df3$Age) #Now, age is converted to numeric
-df3$Gender <- as.numeric(df3$Gender) #Convert Gender into numeric
-df3$Purchase <- as.numeric(log(df3$Purchase))
-
-#*********SOME BASIC FEATURE ENGINEERING************#
-df3 <- dummy.data.frame(df3, names = c("City_Category"), sep = "_") # Creates Dummies for City_Category column
-sapply(df3, class) #Checks classes of all variables to ensure that they're in the right type for modelling
-
-#Partition Data into train and test sets
-sample = sample(1:nrow(df3),size = floor(nrow(df3)*0.7))
-train = df3[sample,]
-test = df3[-sample,]
-train <- train[train$Product_Category_1 <= 18,] #This includes on the 1st 18 categories. Other categories are 
-                                                # noisy
-                                                
 ```
